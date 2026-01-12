@@ -17,10 +17,16 @@ import { connectToSocket } from "./controllers/socketManager.js"; // Socket.io c
 
 import cors from "cors"; // Allow frontend to make requests from different origin
 import dotenv from "dotenv";
+import path from "path"; // For serving static files
+import { fileURLToPath } from "url"; // For ES modules __dirname equivalent
 
 dotenv.config(); // Load environment variables from .env file
 import userRoutes from "./routes/users.routes.js"; // User authentication routes
 import attendanceRoutes from "./routes/attendance.routes.js"; // Attendance report routes
+
+// ES modules equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Initialize Express application
 const app = express();
@@ -82,6 +88,26 @@ app.get('/api/health', (req, res) => {
 app.use("/api/v1/users", userRoutes);
 // All attendance-related endpoints (reports, owner reports) are prefixed with /api/v1/attendance
 app.use("/api/v1/attendance", attendanceRoutes);
+
+// SERVE FRONTEND STATIC FILES IN PRODUCTION
+// This serves the React build files when deployed
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from frontend build directory
+  const frontendBuildPath = path.join(__dirname, '../../frontend/build');
+  console.log('🚀 Serving static files from:', frontendBuildPath);
+  
+  app.use(express.static(frontendBuildPath));
+  
+  // Handle client-side routing - serve index.html for all non-API routes
+  // This ensures React Router works with direct URL access
+  app.get('*', (req, res) => {
+    // Don't intercept API routes
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'API route not found' });
+    }
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
+  });
+}
 
 // START SERVER FUNCTION
 const start = async () => {

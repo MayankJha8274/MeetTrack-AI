@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
+    "build": "cd ../frontend && npm install && npm run build",
     "prod": "pm2 src/app.js",
     "kill-port": "powershell -Command \"$pid = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess; if($pid) { taskkill /F /PID $pid } else { Write-Host 'Port 8000 is free' }\"",
     "restart": "npm run kill-port && npm run dev"
